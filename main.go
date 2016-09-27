@@ -42,16 +42,6 @@ func main() {
 	w.Flush()
 }
 
-// func byte_in_slice(arr []byte, ch byte) bool{
-// 	var result = false
-// 	for i := range arr {
-// 		if arr[i] == ch {
-// 			result = true
-// 			break
-// 		}
-// 	}
-// 	return result
-// }
 //Тут проыеряется есть ли в словаре arr "символ" ch, и если есть, то возвращается еще позиция этого символа в массиве
 func byte_in_dbl_slice(arr [][]byte, ch []byte) (bool, int){
 	var result = false
@@ -74,34 +64,6 @@ func byte_in_dbl_slice(arr [][]byte, ch []byte) (bool, int){
 	return result, id
 }
 
-//тоже самое что и byte_in_dbl_slice только для одномерного массива
-// func byte_id_slice(arr []byte, ch byte) int{
-// 	var result = 0
-// 	for i := range arr {
-// 		if arr[i] == ch {
-// 			result = i
-// 			break
-// 		}
-// 	}
-// 	return result
-// }
-// func fill_in_dic(dict []byte) []byte {
-// 	char := make([]byte, 1)
-// 	fin, err := os.Open("input.txt");
-// 	check(err)
-// 	defer fin.Close()
-// 	stat, err := fin.Stat()
-// 	check(err)
-// 	for i := 0; i < int(stat.Size()); i++ {
-// 		_, err := fin.Read(char)
-// 		check(err)
-// 		fmt.Println(" bl ", byte_in_slice(dict, char[0]), " dict ", dict)
-// 		if !byte_in_slice(dict, char[0]){
-// 			dict = append(dict, char[0])
-// 		}
-// 	}
-// 	return dict
-// }
 //заполняем массив уникальных байтов
 func fill_in_dbl_dic(dict [][]byte) [][]byte {
 	char := make([]byte, 1)
@@ -166,12 +128,3 @@ func compress(dict [][]byte) (message []int) {
 	message = append(message, id)
 	return message
 }
-//позволяет присвоить двумерному массиву одномерный
-//например есть dict [1 2 3 4 5], тогда res заполниться так [[1] [2] [3] [4] [5]]
-// func add_onechar_lines (dict []byte) (res [][]byte) {
-// 	for i := range dict {
-// 		res = append(res, []byte{})
-// 		res[i] = append(res[i], dict[i])
-// 	}
-// 	return res
-// }
