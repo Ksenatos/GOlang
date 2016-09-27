@@ -43,17 +43,17 @@ func main() {
 }
 
 //Тут проыеряется есть ли в словаре arr "символ" ch, и если есть, то возвращается еще позиция этого символа в массиве
-func byte_in_dbl_slice(arr [][]byte, ch []byte) (bool, int){
+func byte_in_dbl_slice(dict [][]byte, char []byte) (bool, int){
 	var result = false
 	var hlp = false
 	var id int
-	for i := range arr {
+	for i := range dict {
 		if !hlp {
-			if len(arr[i]) == len(ch){
+			if len(dict[i]) == len(char){
 			hlp = true
 			id = i
-				for j := range ch {
-					if arr[i][j] != ch[j]{
+				for j := range char {
+					if dict[i][j] != char[j]{
 						hlp = false
 						break
 					}
