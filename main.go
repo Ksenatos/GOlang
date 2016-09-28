@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"bufio"
+	"time"
 )
 //это для обработки ошибок
 //она будет юзаться после каждого раза, где будет заполняться err
@@ -25,14 +26,17 @@ func work_with_files(path string) (file *os.File, stat os.FileInfo){
 	return file, stat
 }
 //вывод в файл *.lzw
-func work_with__out_files(path string, message []int) {
+func work_with__out_files(path string, message []byte) {
 	path = path + ".lzw"
 	fout, err := os.Create(path);
 	check(err)
 	w := bufio.NewWriter(fout)
-	fmt.Fprintln(w, message)
-	w.Flush()
+  for _, line := range message {
+    fmt.Fprint(w, line)
+  }
+  w.Flush()
 }
+
 func read_the_path() string{
 	fmt.Println("enter files path: ")
 	in := bufio.NewScanner(os.Stdin)
@@ -49,26 +53,32 @@ func main() {
 	//получаем путь к input файлу
 	path := read_the_path()
 	//заполняем словарь единичными элементами
+	t0 := time.Now();
 	dict = fill_in_dbl_dic(dict, path)
-	fmt.Println("dictionary=  ", dict)
+	t1 := time.Now();
+	fmt.Println(" time= ", t1.Sub(t0))
+	// fmt.Println("dictionary=  ", dict, " time= ", t1.Sub(t0))
 	//вызываем compress
 	//тут будет собственно закодированый текст
+	t0 = time.Now();
 	message := compress(dict, path)
-	fmt.Println("message=  ", message)
+	t1 = time.Now();
+	fmt.Println(" time= ", t1.Sub(t0))
+ // fmt.Println("message=  ", message)
 	//это вывод в файл
 	work_with__out_files(path, message)
 }
 
 //Тут проыеряется есть ли в словаре dict "символ" char, и если есть, то возвращается еще позиция этого символа в массиве
-func byte_in_dbl_slice(dict [][]byte, char []byte) (bool, int){
+func byte_in_dbl_slice(dict [][]byte, char []byte) (bool, byte){
 	var result = false
 	var hlp = false
-	var id int
+	var id byte
 	for i := range dict {
 		if !hlp {
 			if len(dict[i]) == len(char){
 			hlp = true
-			id = i
+			id = byte(i)
 				for j := range char {
 					if dict[i][j] != char[j]{
 						hlp = false
@@ -98,7 +108,7 @@ func fill_in_dbl_dic(dict [][]byte, path string) [][]byte {
 	return dict
 }
 //ГЛАВНЫЙ ДВИЖ
-func compress(dict [][]byte, path string) (message []int) {
+func compress(dict [][]byte, path string) (message []byte) {
 	//искусственный char
 	//нужен что бы считывать посимвольно
 	char := make([]byte, 1)
@@ -106,7 +116,7 @@ func compress(dict [][]byte, path string) (message []int) {
 	//поточная строка
 	var curent_line []byte
 	var hlp_line []byte
-	var id int
+	var id byte
 	var bl bool
 	fin, stat := work_with_files(path)
 	//считываем первый символ в файле
@@ -116,14 +126,14 @@ func compress(dict [][]byte, path string) (message []int) {
 	curent_line = append(curent_line, next_char[0])
 	//главный цыкл. пока не считался весь файл
 	for i := 1; i < int(stat.Size()); i++ {
-		fmt.Println("-----------------------------------------------------------")
+		// fmt.Println("-----------------------------------------------------------")
 		_, err := fin.Read(char)
 		check(err)
 		hlp_line = append(curent_line, char[0])
 		//проверка есть ли в словаре char. если да то в bl = true а id содержит тот самый код который мы выводим
 		//по сути набор из idшников комбинаци1 из словаря и есть выходящим сообщением
 		bl, id = byte_in_dbl_slice(dict, hlp_line)
-		fmt.Println("id ", id, " bl ", bl, " cl ", string(curent_line), " ch ", string(char[0]), " mess ", message)
+		// fmt.Println("id ", id, " bl ", bl, " cl ", string(curent_line), " ch ", string(char[0]), " mess ", message)
 		if bl {
 			curent_line = append (curent_line, char[0])
 		} else {
