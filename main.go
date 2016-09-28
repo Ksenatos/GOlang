@@ -24,25 +24,42 @@ func work_with_files(path string) (file *os.File, stat os.FileInfo){
 	check(err)
 	return file, stat
 }
-
-func main() {
-	var dict [][]byte
-	//заполняем словарь единичными элементами
-	dict = fill_in_dbl_dic(dict)
-	fmt.Println("dictionary=  ", dict)
-	//вызываем compress
-	//тут будет собственно закодированый текст
-	message := compress(dict)
-	fmt.Println("message=  ", message)
-	//это вывод в файл, он безобразный, я потом поправлю
-	fout, err := os.Create("output.txt");
+//вывод в файл *.lzw
+func work_with__out_files(path string, message []int) {
+	path = path + ".lzw"
+	fout, err := os.Create(path);
 	check(err)
 	w := bufio.NewWriter(fout)
 	fmt.Fprintln(w, message)
 	w.Flush()
 }
+func read_the_path() string{
+	fmt.Println("enter files path: ")
+	in := bufio.NewScanner(os.Stdin)
+  in.Scan()
+  if err := in.Err(); err != nil {
+    fmt.Fprintln(os.Stderr, "Ошибка ввода:", err)
+  }
+  return in.Text()
+}
 
-//Тут проыеряется есть ли в словаре arr "символ" ch, и если есть, то возвращается еще позиция этого символа в массиве
+func main() {
+
+	var dict [][]byte
+	//получаем путь к input файлу
+	path := read_the_path()
+	//заполняем словарь единичными элементами
+	dict = fill_in_dbl_dic(dict, path)
+	fmt.Println("dictionary=  ", dict)
+	//вызываем compress
+	//тут будет собственно закодированый текст
+	message := compress(dict, path)
+	fmt.Println("message=  ", message)
+	//это вывод в файл
+	work_with__out_files(path, message)
+}
+
+//Тут проыеряется есть ли в словаре dict "символ" char, и если есть, то возвращается еще позиция этого символа в массиве
 func byte_in_dbl_slice(dict [][]byte, char []byte) (bool, int){
 	var result = false
 	var hlp = false
@@ -65,9 +82,9 @@ func byte_in_dbl_slice(dict [][]byte, char []byte) (bool, int){
 }
 
 //заполняем массив уникальных байтов
-func fill_in_dbl_dic(dict [][]byte) [][]byte {
+func fill_in_dbl_dic(dict [][]byte, path string) [][]byte {
 	char := make([]byte, 1)
-	fin, stat := work_with_files("input.txt")
+	fin, stat := work_with_files(path)
 	 for i := 0; i < int(stat.Size()); i++ {
 		_, err := fin.Read(char)
 		check(err)
@@ -81,7 +98,7 @@ func fill_in_dbl_dic(dict [][]byte) [][]byte {
 	return dict
 }
 //ГЛАВНЫЙ ДВИЖ
-func compress(dict [][]byte) (message []int) {
+func compress(dict [][]byte, path string) (message []int) {
 	//искусственный char
 	//нужен что бы считывать посимвольно
 	char := make([]byte, 1)
@@ -91,7 +108,7 @@ func compress(dict [][]byte) (message []int) {
 	var hlp_line []byte
 	var id int
 	var bl bool
-	fin, stat := work_with_files("input.txt")
+	fin, stat := work_with_files(path)
 	//считываем первый символ в файле
 	_, err := fin.Read(next_char)
 	check(err)
