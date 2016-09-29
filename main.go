@@ -26,7 +26,7 @@ func work_with_files(path string) (file *os.File, stat os.FileInfo){
 	return file, stat
 }
 //вывод в файл *.lzw
-func work_with__out_files(path string, message []byte) {
+func work_with_out_files(path string, message []byte) {
 	path = path + ".lzw"
 	fout, err := os.Create(path);
 	check(err)
@@ -66,7 +66,7 @@ func main() {
 	fmt.Println(" time= ", t1.Sub(t0))
  // fmt.Println("message=  ", message)
 	//это вывод в файл
-	work_with__out_files(path, message)
+	work_with_out_files(path, message)
 }
 
 //Тут проыеряется есть ли в словаре dict "символ" char, и если есть, то возвращается еще позиция этого символа в массиве
