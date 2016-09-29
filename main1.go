@@ -170,6 +170,7 @@ func decompress (massage []byte, dict [][]byte) (word []byte){
 	var id byte
 	var flag bool
 	var j byte
+	var current_line []byte
 
  //m := map[string]int{"a": 0, "b": 1, "c": 2, "d": 3, "e": 4}
 	file, err := os.Open("input.txt.lzw")
@@ -186,15 +187,15 @@ func decompress (massage []byte, dict [][]byte) (word []byte){
 	    }
 
 
-	 _, err := file.Read(code)  // '0'
+	 _, err = file.Read(code)  // '0'
 	 check(err)
-	hlp_l := append(hlp_l, dict[code])
-	current_line := append(current_line, hlp_l)    // 'a'
-	 j := 0
+	hlp_l = append(hlp_l, dict[code])
+	current_line = append(current_line, hlp_l)    // 'a'
+	 j = 0
 	 for i:= 1; i< int(stat.Size()); i++ {
 	    _, err := file.Read(code)   // first itteration code = '1'
-	    hlp_l := append(hlp_l, dict[code][j]) // first itteration hlp_l = 'ab'  âîçëå àïïåíäà ñòîèò íå ïðèñâîèòü à ïðîñòî ðàâíî, ïðîâåðèòü
-	    buf := append(buf, dict[code])
+	    // hlp_l := append(hlp_l, dict[code][j]) // first itteration hlp_l = 'ab'  âîçëå àïïåíäà ñòîèò íå ïðèñâîèòü à ïðîñòî ðàâíî, ïðîâåðèòü
+	    // buf := append(buf, dict[code])
 	    current_line := append(current_line, dict[code])
 
 
@@ -205,9 +206,7 @@ func decompress (massage []byte, dict [][]byte) (word []byte){
 	         hlp_l := hlp_l[:-1]
 	       }  //else buf := buf[:0] // åñëè óæå åñòü â ìàññèâå, íî ïî ìîåìó íå îáÿçàòåëüíî îáíóëÿòü. åñëè íå áóäåò ðàáîòàòü óáðàòü)
 
-	    }
-	    else
-	    {
+	    } else {
 	        flag, id := byte_in_dbl_slice(dict, hlp_l)
 	        if !flag {
 	          Fill_dic_decomp(dict, hlp_l, i+4)
@@ -218,6 +217,6 @@ func decompress (massage []byte, dict [][]byte) (word []byte){
 
 
 	 }
-	Fmt.Println(current_line)
+	fmt.Println(current_line)
 	return current_line
 	}
