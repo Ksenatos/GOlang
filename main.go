@@ -48,7 +48,6 @@ func read_the_path() string{
 }
 
 func main() {
-
 	var dict [][]byte
 	//получаем путь к input файлу
 	path := read_the_path()
@@ -71,9 +70,10 @@ func main() {
 
 //Тут проыеряется есть ли в словаре dict "символ" char, и если есть, то возвращается еще позиция этого символа в массиве
 func byte_in_dbl_slice(dict [][]byte, char []byte) (bool, byte){
-	var result = false
-	var hlp = false
-	var id byte
+	var (result = false
+	 	hlp = false
+	 	id byte
+ )
 	for i := range dict {
 		if !hlp {
 			if len(dict[i]) == len(char){
@@ -114,10 +114,11 @@ func compress(dict [][]byte, path string) (message []byte) {
 	char := make([]byte, 1)
 	next_char := make([]byte, 1)
 	//поточная строка
-	var curent_line []byte
-	var hlp_line []byte
-	var id byte
-	var bl bool
+	var (curent_line []byte
+	 hlp_line []byte
+	 id byte
+	 bl bool
+ )
 	fin, stat := work_with_files(path)
 	//считываем первый символ в файле
 	_, err := fin.Read(next_char)
