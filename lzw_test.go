@@ -66,12 +66,8 @@ func TestCompress(t *testing.T) {
 	dict = fill_in_dbl_dic(dict, path)
 	res := []byte{0, 1, 0, 2, 7, 0, 3, 11, 10, 8, 4, 5, 6} // ломать тут
 	message := compress(dict, path)
-	// fmt.Println(" res= ", res)
-	// fmt.Println(" dict= ", dict)
 
 	for i := 0; i < n; i++ {
-		// fmt.Println(" res el= ", res[i][j])
-		// fmt.Println(" dict els= ", dict[i][j])
 		if message[i] != res[i] {
 			t.Errorf("%d != %d", message, res)
 		}
