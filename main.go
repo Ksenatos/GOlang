@@ -6,6 +6,9 @@ import (
 	"os"
 	"bufio"
 	"time"
+//	"net/http"
+//	"github.com/wblackecaldwell/profiler"
+//	"strconv"
 )
 //это для обработки ошибок
 //она будет юзаться после каждого раза, где будет заполняться err
@@ -37,6 +40,14 @@ func work_with_out_files(path string, message []byte) {
   w.Flush()
 }
 
+func work_with_out_files_decompress(path string, message string) {
+	fout, err := os.Create(path);
+	check(err)
+	w := bufio.NewWriter(fout)
+    fmt.Fprint(w, message)
+  w.Flush()
+}
+
 func read_the_path() string{
 	fmt.Println("enter files path: ")
 	in := bufio.NewScanner(os.Stdin)
@@ -48,24 +59,36 @@ func read_the_path() string{
 }
 
 func main() {
+//	profiler.AddMemoryProfilingHandlers()
+//	go http.ListenAndServe(":6060", nill)
 	var dict [][]byte
 	//получаем путь к input файлу
-	path := read_the_path()
+	path_in := "files/" +read_the_path()
+	path_out := path_in + "2"
+//	path := "input.txt"
 	//заполняем словарь единичными элементами
 	t0 := time.Now();
-	dict = fill_in_dbl_dic(dict, path)
+	dict = fill_in_dbl_dic(dict, path_in)
 	t1 := time.Now();
-	fmt.Println(" time= ", t1.Sub(t0))
+//	fmt.Println(" time= ", t1.Sub(t0))
 	// fmt.Println("dictionary=  ", dict, " time= ", t1.Sub(t0))
 	//вызываем compress
 	//тут будет собственно закодированый текст
 	t0 = time.Now();
-	message := compress(dict, path)
+	message := compress(dict, path_in)
 	t1 = time.Now();
-	fmt.Println(" time= ", t1.Sub(t0))
+	fmt.Println("compress time= ", t1.Sub(t0))
  // fmt.Println("message=  ", message)
 	//это вывод в файл
-	work_with_out_files(path, message)
+	work_with_out_files(path_in, message)
+
+	var message2 string
+	t0 = time.Now();
+	message2 = decompress(dict, message)
+	t1 = time.Now();
+	fmt.Println("decompress time= ", t1.Sub(t0))
+	//fmt.Println("m2=", message2)
+	work_with_out_files_decompress(path_out, message2)
 }
 
 //Тут проыеряется есть ли в словаре dict "символ" char, и если есть, то возвращается еще позиция этого символа в массиве
@@ -156,3 +179,29 @@ func compress(dict [][]byte, path string) (message []byte) {
 	message = append(message, id)
 	return message
 }
+
+func decompress(dict [][]byte, message []byte) (message2 string){
+	var char byte
+	message2 += string(dict[message[0]])
+	for i := 1; i < int(len(message)-1); i++ {
+		curent_line := make([]byte, len(dict[message[i]]))
+		copy(curent_line, dict[message[i]])
+		message2 = message2 + string(curent_line)
+		dict = append(dict, dict[char])
+		dict[len(dict)-1] = append(dict[len(dict)-1], curent_line[0])
+		char = message[i]
+	}
+	return message2
+}
+
+// func byte_to_str_to_int_to_str(num []byte, dict [][]byte) string {
+// 	i, err := strconv.Atoi(string(num))
+// 	check(err)
+// 	return string(dict[i])
+// }
+//
+// func byte_to_str_to_int(num []byte, dict [][]byte) []byte {
+// 	i, err := strconv.Atoi(string(num))
+// 	check(err)
+// 	return dict[i]
+// }
