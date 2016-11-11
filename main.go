@@ -102,8 +102,7 @@ func main() {
 
 		for i:=1; i<=threads_numbers; i++{
 
-			 go func(){
-
+			 go func(){}
 				dict = append(dict, dict_artificial)
 				message = append(message, message_artificial)
 				dict[i-1] = fill_in_dbl_dic(dict[i-1], path_in, i)
