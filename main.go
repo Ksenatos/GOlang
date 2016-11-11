@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 	"bufio"
+	"runtime"
+	"sync"
 	"time"
 //	"net/http"
 //	"github.com/wblackecaldwell/profiler"
@@ -57,38 +59,71 @@ func read_the_path() string{
   }
   return in.Text()
 }
+var threads_numbers int = 6
+var wg sync.WaitGroup
 
 func main() {
-//	profiler.AddMemoryProfilingHandlers()
-//	go http.ListenAndServe(":6060", nill)
-	var dict [][]byte
+	runtime.GOMAXPROCS(1)
+	var dict [][][]byte
+	var dict_artificial [][]byte
+  //var dict_o [][]byte
+	var message [][]byte
+	var message_artificial []byte
+	var result_message []byte
 	//получаем путь к input файлу
-	path_in := "files/" +read_the_path()
-	path_out := path_in + "2"
-//	path := "input.txt"
+	//path_in := "files/" +read_the_path()
+	//path_out := path_in + "2"
+	path_in := "files/Hamlet.txt"
 	//заполняем словарь единичными элементами
-	t0 := time.Now();
-	dict = fill_in_dbl_dic(dict, path_in)
-	t1 := time.Now();
+//	t0 := time.Now();
+	//dict_o = fill_in_dbl_dic_old(dict_o, path_in)
+	//t1 := time.Now();
 //	fmt.Println(" time= ", t1.Sub(t0))
-	// fmt.Println("dictionary=  ", dict, " time= ", t1.Sub(t0))
+//	 fmt.Println("dictionary=  ", dict_o)
 	//вызываем compress
 	//тут будет собственно закодированый текст
-	t0 = time.Now();
-	message := compress(dict, path_in)
-	t1 = time.Now();
-	fmt.Println("compress time= ", t1.Sub(t0))
- // fmt.Println("message=  ", message)
+	// t0 = time.Now();
+	 //_ = compress_old(dict_o, path_in)
+	// t1 := time.Now();
+	 //fmt.Println("compress time old= ", t1.Sub(t0))
 	//это вывод в файл
-	work_with_out_files(path_in, message)
+	//work_with_out_files(path_in, message_old)
 
-	var message2 string
-	t0 = time.Now();
-	message2 = decompress(dict, message)
-	t1 = time.Now();
-	fmt.Println("decompress time= ", t1.Sub(t0))
-	//fmt.Println("m2=", message2)
-	work_with_out_files_decompress(path_out, message2)
+	// var message2 string
+	// t0 = time.Now();
+	// message2 = decompress(dict, message)
+	// t1 = time.Now();
+	// fmt.Println("decompress time= ", t1.Sub(t0))
+	// //fmt.Println("m2=", message2)
+	// work_with_out_files_decompress(path_out, message2)
+		//c := make(chan [][]byte)
+
+	//	t0 := time.Now();
+
+		for i:=1; i<=threads_numbers; i++{
+
+			 go func(){
+
+				dict = append(dict, dict_artificial)
+				message = append(message, message_artificial)
+				dict[i-1] = fill_in_dbl_dic(dict[i-1], path_in, i)
+				message[i-1] = compress(dict[i-1], path_in, i)
+				fmt.Println("res", message)
+			}()
+			time.Sleep(100 * time.Millisecond)
+
+		}
+		time.Sleep(100 * time.Millisecond)
+		for j:=1; j<=threads_numbers; j++{
+		for _, value:=range message[j-1]{
+			result_message = append(result_message, value)
+			}}
+		work_with_out_files(path_in, result_message)
+		//t1:= time.Now();
+
+		//t0=t0.Add(time.Millisecond*10*time.Duration(threads_numbers))
+		//fmt.Println("compress time= ", t1.Sub(t0) - (time.Millisecond*200*time.Duration(threads_numbers)))
+		//fmt.Println("real", compress(dict_o, path_in))
 }
 
 //Тут проыеряется есть ли в словаре dict "символ" char, и если есть, то возвращается еще позиция этого символа в массиве
@@ -115,7 +150,30 @@ func byte_in_dbl_slice(dict [][]byte, char []byte) (bool, byte){
 }
 
 //заполняем массив уникальных байтов
-func fill_in_dbl_dic(dict [][]byte, path string) [][]byte {
+func fill_in_dbl_dic(dict [][]byte, path string, t_num int) ([][]byte){
+	char := make([]byte, 1)
+	fin, stat := work_with_files(path)
+	for j:=0; j<t_num-1; j++{
+		for i := 0; i < (int(stat.Size())/threads_numbers); i++ {
+			_, _ = fin.Read(char)
+		}
+	}
+	 for i := 0 ; i < (int(stat.Size())/threads_numbers); i++ {
+		 //fmt.Println("i=", i)
+	// for i := 0; i < int(stat.Size()); i++ {
+		_, err := fin.Read(char)
+		check(err)
+		bl, _ := byte_in_dbl_slice(dict, char)
+		if !bl{
+			line := make([]byte, len(char))
+			copy(line, char)
+			dict = append(dict, line)
+		}
+	}
+	return dict
+}
+
+func fill_in_dbl_dic_old(dict [][]byte, path string) [][]byte {
 	char := make([]byte, 1)
 	fin, stat := work_with_files(path)
 	 for i := 0; i < int(stat.Size()); i++ {
@@ -131,7 +189,7 @@ func fill_in_dbl_dic(dict [][]byte, path string) [][]byte {
 	return dict
 }
 //ГЛАВНЫЙ ДВИЖ
-func compress(dict [][]byte, path string) (message []byte) {
+func compress(dict [][]byte, path string, t_num int) (message []byte) {
 	//искусственный char
 	//нужен что бы считывать посимвольно
 	char := make([]byte, 1)
@@ -149,7 +207,12 @@ func compress(dict [][]byte, path string) (message []byte) {
 	//забиваем в поточную строку первый символ
 	curent_line = append(curent_line, next_char[0])
 	//главный цыкл. пока не считался весь файл
-	for i := 1; i < int(stat.Size()); i++ {
+	for j:=0; j<t_num-1; j++{
+		for i := 0; i < (int(stat.Size())/threads_numbers); i++ {
+			_, _ = fin.Read(char)
+		}
+	}
+	for i := 1; i < (int(stat.Size())/threads_numbers); i++ {
 		// fmt.Println("-----------------------------------------------------------")
 		_, err := fin.Read(char)
 		check(err)
@@ -172,6 +235,40 @@ func compress(dict [][]byte, path string) (message []byte) {
 			//обнуляем поточную строку
 			curent_line = curent_line[:0]
 			//доюавляем в пустую поточную строку последний считаный симол
+			curent_line = append(curent_line, char[0])
+		}
+		bl, id = byte_in_dbl_slice(dict, curent_line)
+	}
+	message = append(message, id)
+	return message
+}
+
+func compress_old(dict [][]byte, path string) (message []byte) {
+	char := make([]byte, 1)
+	next_char := make([]byte, 1)
+	var (curent_line []byte
+	 hlp_line []byte
+	 id byte
+	 bl bool
+ )
+	fin, stat := work_with_files(path)
+	_, err := fin.Read(next_char)
+	check(err)
+	curent_line = append(curent_line, next_char[0])
+	for i := 1; i < int(stat.Size()); i++ {
+		_, err := fin.Read(char)
+		check(err)
+		hlp_line = append(curent_line, char[0])
+		bl, id = byte_in_dbl_slice(dict, hlp_line)
+		if bl {
+			curent_line = append (curent_line, char[0])
+		} else {
+			bl, id = byte_in_dbl_slice(dict, curent_line)
+			message = append(message, id)
+			line := make([]byte, len(hlp_line))
+			copy(line, hlp_line)
+			dict = append(dict, line)
+			curent_line = curent_line[:0]
 			curent_line = append(curent_line, char[0])
 		}
 		bl, id = byte_in_dbl_slice(dict, curent_line)
